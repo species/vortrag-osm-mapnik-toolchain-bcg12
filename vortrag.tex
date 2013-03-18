@@ -1,0 +1,375 @@
+\documentclass{beamer} 
+
+% Michael Maier, 2012.
+% CC-BY-SA
+
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{graphicx}
+
+\title{Mapnik-Toolchain für den eigenen OpenStreetMap-Kartenserver} 
+\author{Michael Maier \textless Michael.Maier@student.tugraz.at\textgreater} 
+\date{May 12th, 2012} 
+
+\usetheme{Antibes}
+
+
+
+%\usebackgroundtemplatei{
+%\includegraphics[width=\paperwidth,
+%height=0.8\paperheight]{mag_map.png}
+%}
+
+\begin{document}
+
+%\maketitle
+
+\begin{frame} 
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.5\textwidth]{mag_map.png}
+\end{figure}
+
+\begin{center}
+\Huge{Der OSM-Renderingserver}
+\end{center}
+
+\begin{center}
+\Large{\emph{Die Toolchain zu eigenen Karten}}
+\end{center}
+
+\end{frame}
+
+
+
+\begin{frame}{whoami}
+
+  \begin{itemize}
+    \item Michael Maier \textless \href{mailto:Michael.Maier@student.tugraz.at}{Michael.Maier@student.tugraz.at}\textgreater
+    \item Telematik-Student an der TU Graz seit 2003
+    \item Linux-User (Debian/grml) seit 2004
+    \item OpenStreetMap seit Juli 2010
+    \begin{itemize}
+      \item OSM-Username: \emph{species}
+      \item Mapping-Area Graz, Leoben
+      \item Mit dem Fahrrad, Motorrad und Öffis
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{Einleitung}
+
+\begin{frame}{Was ist OpenStreetMap}
+
+\begin{itemize}
+  \item OpenStreetMap ist eine freie Weltkarte nach dem Wiki-Prinzip
+  \item Entsteht aus der Arbeit von weltweit 600.000 Hobbykartografen
+  \item Das komplette ``planet file'' ist inzwischen ca. 250\,GB groß (xml)
+\end{itemize}
+
+
+\end{frame}
+
+\begin{frame}{Wer steckt dahinter}
+  \begin{itemize}
+    \item Menschen wie Du und ich ... "\emph{Mapper}"
+    \item Die OpenStreetMap Foundation
+    \item Organisationen, die die Verwendung ihrer Daten erlauben \\
+    zB Luftbilder von:
+    \begin{itemize}
+      \item Yahoo
+      \item Bing
+      \item Geoimage.at
+    \end{itemize}
+  \end{itemize}
+
+\end{frame}
+
+
+
+\section{Warum OpenStreetMap}
+
+\begin{frame}{Warum OpenStreetMap?}
+
+Nachteile kommerzieller Anbieter:
+
+\begin{itemize}
+  \item Restriktive Lizenzen - only Free as in Beer
+  \item Offline-Nutzung oft nicht erlaubt - Roaming!
+  \item Absichtliche Fehler
+  \item Änderungen/Richtigstellungen?
+  \pause
+  \item Bsp Google TOS: Durch die Nutzung schließen sie einen rechtsgültigen Vertrag mit Google - Dürfen unmündige Personen (unter 18?) Google Maps überhaupt nutzen?
+  \item Kosten! Google verlangt ab 25K API-Zugriffen/Tag!
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Warum OpenStreetMap?}
+
+Vorteile von OpenStreetMap:
+
+\begin{itemize}
+  \item Rohdaten sind frei verfügbar
+  \item Jeder kann Dinge ändern
+  \item Freie Karten für Navis
+  \item Karten mit eigenem Stil rendern
+\end{itemize}
+
+Freiheit schafft Möglichkeiten!
+
+\end{frame}
+
+
+\section{Wie funktioniert OpenStreetMap}
+
+\begin{frame}{Wie funktioniert OpenStreetMap?}
+
+\begin{itemize}
+  \item Zentrale Datenbank
+  \item Jeder kann Daten hinzufügen/ändern
+  \item Qualitätskontrolle durch jeden!
+  \item Jeder kann Daten/Extrakte runterladen
+\end{itemize}
+
+\end{frame}
+
+
+\subsection{Daten}
+\begin{frame}{Datenformat}
+
+\begin{itemize}
+  \item Punkte (Koordinaten), $\Rightarrow$ ``Node'' \includegraphics[width=0.5cm]{node.png}
+  \item Flächen sind eine Reihe von Nodes, $\Rightarrow$ ``Way'' \includegraphics[width=0.5cm]{way.png}
+  \item Gruppierungen von Ways $\Rightarrow$ ``Relations'' \includegraphics[width=0.5cm]{relation.png}
+\end{itemize}
+
+\pause
+
+Jedes Element hat Eigenschaften $\Rightarrow$ ``Tags'', zB:
+\begin{itemize}
+  \item amenity = Cafe \includegraphics[width=0.5cm]{cafe.png}
+  \item highway = footway \includegraphics[width=1cm]{footway.png}
+  \item building = yes  \includegraphics[width=0.5cm]{building.png}
+  \item landuse = farmland 
+\end{itemize}
+
+\pause
+
+Was taggen wir?
+
+\pause
+
+Alles :-)
+
+\begin{itemize}
+  \item highway=*, landuse=*, shop=*, tourism=*, \dots
+  \item ?=*
+\end{itemize}
+
+Gebräuchliche Tags und Beschreibungen $\Rightarrow$ Wiki!
+
+\end{frame}
+
+\section{Kartenserver}
+
+\begin{frame}{Quellen?}
+  Alles aus dem Wiki:
+
+  \begin{itemize}
+              \item  Howto: Minutely Mapnik             \url{http://wiki.openstreetmap.org/wiki/DE:Minutely\_Mapnik}
+  \item   \url{http://wiki.osm.org/Mapnik}
+  \item \url{http://wiki.osm.org/Tirex}
+  \item \url{http://wiki.openstreetmap.org/wiki/Contours\_on\_the\_Cycle\_Map}
+\end{itemize}
+
+
+\end{frame}
+
+
+
+\begin{frame}{Übersicht}
+  Wie kommt man zur Slippy Map?
+  \pause
+  \begin{itemize}
+        \item Javascript-API im Browser
+        \item Tiles werden vom Renderer erzeugt
+        \item Renderjobs werden von Queue-Manager verwaltet
+        \item Queue-Manager bekommt Tasks vom Webserver-Modul
+        \item Webserver liefert Tiles aus
+        \item Hintergrund: 
+          \begin{itemize}
+                  \item GIS-Datenbank Postgres/PostGIS
+                  \item DB-Fill mit Osmosis/osm2pgsql
+                  \item Minutely Updates
+         \end{itemize}
+       \end{itemize}
+
+
+\end{frame}
+
+
+\subsection{Grundlagen}
+
+\begin{frame}{Userseitig}
+Wie funktioniert die Kartenanzeige im Browser?
+\pause
+
+\begin{itemize}
+  \item Javascript-Framework lädt on Demand Kacheln (Tiles) vom Server
+\end{itemize}
+zB
+\begin{itemize}
+  \item \href{http://www.openlayers.org/}{OpenLayers}
+  \item \href{http://leaflet.cloudmade.com/}{Leaflet} by Cloudmade
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Tiles?}
+  \begin{itemize}
+        \item Ein Tile ist ein 256x256px PNG.
+
+        \item Tiles werden zB folgendermaßen referenziert:
+  \url{http://tile.openstreetmap.org/7/63/42.png}
+  
+  \$Hostname/\$tiledirs/\$zoom/\$x/\$y.png
+
+	\item Serverseitig werden sog. \emph{Metatiles} verwendet, die aus 8x8 Tiles bestehen. (Weniger Renderaufwand)
+  \end{itemize}
+
+\end{frame}
+
+\subsection{Serverseitig}
+\begin{frame}{Renderer:Mapnik}
+  Portal siehe \url{http://wiki.osm.org/Mapnik}
+  \begin{itemize}
+              \item Python
+              \item Stile in XML
+              \item Daten von Postgres oder Files
+            \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Queue-Manager:Tirex}
+  Sprich: T-Rex
+  siehe \url{http://wiki.osm.org/Tirex}
+  \begin{itemize}
+                    \item Multi-CPU unterstützung
+                    \item Job-Verteilung auf mehrere Rechner
+                    \item Steuerung durch:
+                      \begin{itemize}
+                      \item wird vom Apache \emph{mod-tile} gesteuert
+                      \item batch-jobs per skript
+                    \end{itemize}
+                  \item Munin/Nagios-Überwachung
+                \end{itemize}
+
+
+\end{frame}
+
+\begin{frame}{Webserver: Apache mit \emph{mod-tile}}
+  Liefert aus gerenderten Metatiles ausgeschnittene Tiles aus.
+  \pause
+  Sehr simples Modul...
+  \begin{itemize}
+                          \item Zoomlevel hardcoded $\Rightarrow$ recompile for z19
+                          \item metatiles muessen in  /var/lib/mod\_tile/ liegen! (hardcoded)
+                        \end{itemize}
+
+\end{frame}
+
+\subsection{Datenbank}
+
+
+\begin{frame}{Postgres/PostGIS}
+Postgresql-DB mit PostGIS-Erweiterung
+\begin{itemize}
+  \item PostGIS noch selbst zu kompilieren!
+  \item Empfehlung: hstore-Extension
+  \item Version: 8.3 oder 9.x, nicht 8.4!
+	\item Wichtig: Tunen der DB, siehe postgres-Hilfe
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Hardware}
+Hardware:
+
+\begin{itemize}
+  \item DB entweder in RAM
+  \item oder auf SSD
+    \pause
+  \item Alles andere Sinnlos...
+\end{itemize}
+
+Selbst für Mitteleuropa:
+\begin{itemize}
+          \item 6-Core Phenom 2.8GHz
+          \item 16GB Ram
+          \item SSD mit 500 MB/sec und 85000 IOPS
+          \item tiles und Rest auf 3 anderen Platten
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Füllen der Datenbank}
+OSM-Daten:
+\begin{itemize}
+        \item Runterladen des ganzen Planet oder Auszügen von \url{http://geofabrik.de}
+	\item ev. ausschneiden eines Gebiets mit \href{http://wiki.openstreetmap.org/wiki/Osmosis}{Osmosis}
+	\item einspielen der Daten mit osm2pgsql
+\end{itemize}
+Höhenschichtlinien für Contour-Maps:
+\begin{itemize}
+        \item Daten für AT von der NASA downloaden
+	\item Anleitung zum Importieren mittels scripts: \url{http://wiki.openstreetmap.org/wiki/Contours\_on\_the\_Cycle\_Map}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Minutely Updates}
+\begin{itemize}
+        \item Es gibt minutely diffs des Planeten (.osc) am OSM-Server
+	\item cron-job downloaded sie
+ 	\item diff-applien mit osm2pgsql
+	\item bounding box bei osm2pgsql angeben.
+\end{itemize}
+
+\end{frame}
+
+
+\section{Help?}
+
+\begin{frame}{Help}
+
+\begin{itemize}
+  \item Erste Station sollte das Wiki sein: \url{http://wiki.osm.org}
+  \item Immer noch etwas Unklar? $\Rightarrow$ Mailingliste \href{http://lists.openstreetmap.org/listinfo/talk-at}{talk-at}
+  \pause
+  \item \href{http://wiki.openstreetmap.org/wiki/Graz/Stammtisch}{Stammtisch}! In Graz alle 2 Monate - der nächste am 31. Mai im Brot \& Spiele
+\end{itemize}
+
+\end{frame}
+
+\section{Danke!}
+
+\begin{frame}{Abschluss}
+
+Folien zum Mapnik-Vortrag für das \href{http://www.barcamp.at/BarCamp\_Graz\_2012}{GeoCamp/BarCamp Graz 2012} am 11.-13.5.2012.
+\vspace{1cm}
+
+Folien unter \includegraphics[width=1cm]{cc-by-sa.png}.
+\vspace{1cm}
+
+Erstellt mittels \LaTeX Beamer, source auf Anfrage.
+\vspace{1cm}
+
+\href{mailto:michael.maier@student.tugraz.at}{Michael Maier}
+\end{frame}
+
+\end{document}
+
+
+\end{document}
